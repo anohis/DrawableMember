@@ -2,7 +2,10 @@ namespace DrawableMember.Runtime
 {
     using System;
 
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
+    [AttributeUsage(
+        AttributeTargets.Method
+            | AttributeTargets.Property
+            | AttributeTargets.Field)]
     public sealed class DrawableAttribute : Attribute
     {
     }

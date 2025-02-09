@@ -11,6 +11,10 @@ namespace DrawableMember.Sample
         private int _intProp;
 
         [Drawable]
+        [SerializeField]
+        private int _number;
+
+        [Drawable]
         public int IntProp
         {
             get => _intProp;

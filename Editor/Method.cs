@@ -6,7 +6,7 @@ namespace DrawableMember.Editor
     using UnityEditor;
     using UnityEngine;
 
-    internal class Method
+    internal class Method : IMemberDrawer
     {
         private readonly string _name;
         private readonly MethodInfo _method;
