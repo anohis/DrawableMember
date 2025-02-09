@@ -7,7 +7,9 @@ namespace DrawableMember.Runtime
     {
     }
 
-    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false)]
+    [AttributeUsage(
+        AttributeTargets.Parameter | AttributeTargets.Property,
+        AllowMultiple = false)]
     public sealed class DrawableTypeAttribute : Attribute
     {
         public readonly Type Type;
@@ -15,6 +17,21 @@ namespace DrawableMember.Runtime
         public DrawableTypeAttribute(Type type)
         {
             Type = type;
+        }
+    }
+
+    [AttributeUsage(
+        AttributeTargets.Parameter
+            | AttributeTargets.Property
+            | AttributeTargets.Method
+        , AllowMultiple = false)]
+    public sealed class DrawableNameAttribute : Attribute
+    {
+        public readonly string Name;
+
+        public DrawableNameAttribute(string name)
+        {
+            Name = name;
         }
     }
 }
