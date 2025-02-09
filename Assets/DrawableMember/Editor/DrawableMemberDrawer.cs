@@ -8,24 +8,25 @@ namespace DrawableMember.Editor
     using UnityEditor;
     using UnityEngine;
 
-    public class DrawableMemberDrawer
+    public interface IMemberDrawer
     {
-        private readonly Property[] _properties;
-        private readonly Method[] _methods;
+        void Draw(object target);
+    }
+
+    public class DrawableMemberDrawer : IMemberDrawer
+    {
+        private readonly IMemberDrawer[] _drawers;
 
         private bool _isFoldoutExpanded;
 
-        internal DrawableMemberDrawer(
-            Property[] properties,
-            Method[] methods)
+        internal DrawableMemberDrawer(IMemberDrawer[] drawers)
         {
-            _properties = properties;
-            _methods = methods;
+            _drawers = drawers;
         }
 
         public void Draw(object target)
         {
-            if (!_methods.Any() && !_properties.Any())
+            if (!_drawers.Any())
             {
                 return;
             }
@@ -41,14 +42,9 @@ namespace DrawableMember.Editor
 
             using (new EditorGUI.IndentLevelScope())
             {
-                foreach (var property in _properties)
+                foreach (var drawer in _drawers)
                 {
-                    property.Draw(target);
-                }
-
-                foreach (var method in _methods)
-                {
-                    method.Draw(target);
+                    drawer.Draw(target);
                 }
             }
         }
@@ -60,6 +56,7 @@ namespace DrawableMember.Editor
         private readonly ParameterFactory _parameterFactory;
         private readonly MethodFactory _methodFactory;
         private readonly PropertyFactory _propertyFactory;
+        private readonly FieldFactory _fieldFactory;
 
         public DrawableMemberDrawerFactory()
         {
@@ -67,6 +64,7 @@ namespace DrawableMember.Editor
             _parameterFactory = new(_scriptableObjectFactory);
             _methodFactory = new(_parameterFactory);
             _propertyFactory = new(_scriptableObjectFactory);
+            _fieldFactory = new(_scriptableObjectFactory);
         }
 
         public DrawableMemberDrawer Create(Type type)
@@ -80,21 +78,28 @@ namespace DrawableMember.Editor
                     | BindingFlags.NonPublic;
 
             return Create(
+                type.GetFields(bindingFlags)
+                    .Where(field => field.IsDefined(attributeType)),
                 type.GetProperties(bindingFlags)
                     .Where(property => property.IsDefined(attributeType)),
                 type.GetMethods(bindingFlags)
-                    .Where(property => property.IsDefined(attributeType)));
+                    .Where(method => method.IsDefined(attributeType)));
         }
 
         public DrawableMemberDrawer Create(
+            IEnumerable<FieldInfo> fields,
             IEnumerable<PropertyInfo> properties,
             IEnumerable<MethodInfo> methods)
             => new(
-                properties
-                    .Select(_propertyFactory.Create)
-                    .ToArray(),
-                methods
-                    .Select(_methodFactory.Create)
+                fields
+                    .Select(_fieldFactory.Create)
+                    .Cast<IMemberDrawer>()
+                    .Concat(properties
+                        .Select(_propertyFactory.Create)
+                        .Cast<IMemberDrawer>())
+                    .Concat(methods
+                        .Select(_methodFactory.Create)
+                        .Cast<IMemberDrawer>())
                     .ToArray());
     }
 }

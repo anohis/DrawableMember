@@ -5,23 +5,23 @@ namespace DrawableMember.Editor
     using UnityEditor;
     using UnityEngine;
 
-    internal class Property : IMemberDrawer
+    internal class Field : IMemberDrawer
     {
         private readonly string _name;
-        private readonly PropertyInfo _property;
+        private readonly FieldInfo _field;
         private readonly Parameter _getter;
         private readonly Parameter _setter;
 
         private bool _isFoldoutExpanded;
 
-        public Property(
+        public Field(
             string name,
-            PropertyInfo property,
+            FieldInfo field,
             Parameter getter,
             Parameter setter)
         {
             _name = name;
-            _property = property;
+            _field = field;
             _getter = getter;
             _setter = setter;
         }
@@ -43,40 +43,34 @@ namespace DrawableMember.Editor
                 using (new EditorGUI.IndentLevelScope(-1))
                 using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    if (_getter != null)
+                    using (new EditorGUI.DisabledScope(true))
                     {
-                        using (new EditorGUI.DisabledScope(true))
-                        {
-                            _getter.Value = _property.GetValue(target);
-                            _getter.Draw();
-                        }
+                        _getter.Value = _field.GetValue(target);
+                        _getter.Draw();
                     }
 
-                    if (_setter != null)
+                    _setter.Draw();
+                    if (GUILayout.Button("Set Value"))
                     {
-                        _setter.Draw();
-                        if (GUILayout.Button("Set Value"))
-                        {
-                            _property.SetValue(
-                               target,
-                               _setter.Value);
-                        }
+                        _field.SetValue(
+                           target,
+                           _setter.Value);
                     }
                 }
             }
         }
     }
 
-    internal class PropertyFactory
+    internal class FieldFactory
     {
         private readonly ScriptableObjectFactory _scriptableObjectFactory;
 
-        public PropertyFactory(ScriptableObjectFactory scriptableObjectFactory)
+        public FieldFactory(ScriptableObjectFactory scriptableObjectFactory)
         {
             _scriptableObjectFactory = scriptableObjectFactory;
         }
 
-        public Property Create(PropertyInfo info)
+        public Field Create(FieldInfo info)
         {
             var attribute = info.GetCustomAttribute<DrawableTypeAttribute>();
 
@@ -85,20 +79,16 @@ namespace DrawableMember.Editor
                     ?.Name
                     ?? info.Name,
                 info,
-                info.CanRead
-                    ? new(
-                        _scriptableObjectFactory.Create(info.PropertyType),
-                        "current value")
-                    : null,
-                info.CanWrite
-                    ? new(
-                        _scriptableObjectFactory.Create(
-                            attribute != null
-                                && attribute.Type.IsInheritsFrom(info.PropertyType)
-                                ? attribute.Type
-                                : info.PropertyType),
-                        "new value")
-                    : null);
+                new(
+                  _scriptableObjectFactory.Create(info.FieldType),
+                  "current value"),
+                new(
+                  _scriptableObjectFactory.Create(
+                      attribute != null
+                          && attribute.Type.IsInheritsFrom(info.FieldType)
+                          ? attribute.Type
+                          : info.FieldType),
+                  "new value"));
         }
     }
 }
