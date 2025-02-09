@@ -33,24 +33,31 @@ namespace DrawableMember.Editor
             }
 
             using (new EditorGUI.IndentLevelScope())
+            using (new EditorGUILayout.HorizontalScope())
             {
-                if (_getter != null)
-                {
-                    using (new EditorGUI.DisabledScope(true))
-                    {
-                        _getter.Value = _property.GetValue(target);
-                        _getter.Draw();
-                    }
-                }
+                EditorGUILayout.Space(EditorGUI.indentLevel * 15, false);
 
-                if (_setter != null)
+                using (new EditorGUI.IndentLevelScope(-1))
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    _setter.Draw();
-                    if (GUILayout.Button("Set Value"))
+                    if (_getter != null)
                     {
-                        _property.SetValue(
-                           target,
-                           _setter.Value);
+                        using (new EditorGUI.DisabledScope(true))
+                        {
+                            _getter.Value = _property.GetValue(target);
+                            _getter.Draw();
+                        }
+                    }
+
+                    if (_setter != null)
+                    {
+                        _setter.Draw();
+                        if (GUILayout.Button("Set Value"))
+                        {
+                            _property.SetValue(
+                               target,
+                               _setter.Value);
+                        }
                     }
                 }
             }
