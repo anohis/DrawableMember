@@ -1,5 +1,5 @@
 {
-    "name": "DrawableMember.Editor",
+    "name": "DrawableMember.Sample",
     "rootNamespace": "",
     "references": [
         "GUID:2a31f3a85fb06a44da46bef2e60250c4"
