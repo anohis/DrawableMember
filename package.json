@@ -1,0 +1,11 @@
+{
+  "name": "com.asa.drawablemember",
+  "version": "1.0.0",
+  "displayName": "DrawableMember",
+  "description": "DrawableMember",
+  "unity": "6000.0",
+  "author": {
+    "name": "asa"
+  },
+  "dependencies": {}
+}
