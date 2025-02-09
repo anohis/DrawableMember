@@ -30,19 +30,26 @@ namespace DrawableMember.Editor
             }
 
             using (new EditorGUI.IndentLevelScope())
+            using (new EditorGUILayout.HorizontalScope())
             {
-                foreach (var parameter in _parameters)
-                {
-                    parameter.Draw();
-                }
+                EditorGUILayout.Space(EditorGUI.indentLevel * 15, false);
 
-                if (GUILayout.Button("Invoke"))
+                using (new EditorGUI.IndentLevelScope(-1))
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    _method.Invoke(
-                        target,
-                        _parameters
-                            .Select(parameter => parameter.Value)
-                            .ToArray());
+                    foreach (var parameter in _parameters)
+                    {
+                        parameter.Draw();
+                    }
+
+                    if (GUILayout.Button("Invoke"))
+                    {
+                        _method.Invoke(
+                            target,
+                            _parameters
+                                .Select(parameter => parameter.Value)
+                                .ToArray());
+                    }
                 }
             }
         }

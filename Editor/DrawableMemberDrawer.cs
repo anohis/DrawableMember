@@ -5,6 +5,7 @@ namespace DrawableMember.Editor
     using System.Linq;
     using System.Reflection;
     using UnityEditor;
+    using UnityEngine;
 
     public class DrawableMemberDrawer
     {
@@ -48,7 +49,9 @@ namespace DrawableMember.Editor
                 return;
             }
 
-            _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, "[Debug]");
+            var style = new GUIStyle(EditorStyles.foldout);
+            style.font = EditorStyles.boldFont;
+            _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, "Drawable Members", style);
 
             if (!_isFoldoutExpanded)
             {
