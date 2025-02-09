@@ -24,7 +24,7 @@ namespace DrawableMember.Editor
             _drawers = drawers;
         }
 
-        public void Draw(object target)
+        void IMemberDrawer.Draw(object target)
         {
             if (!_drawers.Any())
             {
