@@ -26,8 +26,8 @@ namespace DrawableMember.Runtime
     [AttributeUsage(
         AttributeTargets.Parameter
             | AttributeTargets.Property
-            | AttributeTargets.Method
-        , AllowMultiple = false)]
+            | AttributeTargets.Method,
+        AllowMultiple = false)]
     public sealed class DrawableNameAttribute : Attribute
     {
         public readonly string Name;
