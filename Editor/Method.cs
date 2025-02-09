@@ -24,7 +24,7 @@ namespace DrawableMember.Editor
             _parameters = parameters;
         }
 
-        public void Draw(object target)
+        void IMemberDrawer.Draw(object target)
         {
             _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, _name);
 

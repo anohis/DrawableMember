@@ -6,7 +6,7 @@ namespace DrawableMember.Editor
     [CanEditMultipleObjects]
     public class DrawableMemberInspector : Editor
     {
-        private DrawableMemberDrawer _drawer;
+        private IMemberDrawer _drawer;
 
         private void OnEnable()
         {
