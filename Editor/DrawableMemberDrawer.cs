@@ -2,6 +2,7 @@ namespace DrawableMember.Editor
 {
     using DrawableMember.Runtime;
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using UnityEditor;
@@ -9,37 +10,17 @@ namespace DrawableMember.Editor
 
     public class DrawableMemberDrawer
     {
-        private readonly Method[] _methods;
         private readonly Property[] _properties;
+        private readonly Method[] _methods;
 
         private bool _isFoldoutExpanded;
 
-        public DrawableMemberDrawer(Type type)
+        internal DrawableMemberDrawer(
+            Property[] properties,
+            Method[] methods)
         {
-            var scriptableObjectFactory = new ScriptableObjectFactory();
-            var parameterFactory = new ParameterFactory(scriptableObjectFactory);
-            var methodFactory = new MethodFactory(parameterFactory);
-            var propertyFactory = new PropertyFactory(scriptableObjectFactory);
-
-            var attributeType = typeof(DrawableAttribute);
-
-            var bindingFlags =
-                BindingFlags.Instance
-                    | BindingFlags.Static
-                    | BindingFlags.Public
-                    | BindingFlags.NonPublic;
-
-            _methods = type
-                .GetMethods(bindingFlags)
-                .Where(method => method.IsDefined(attributeType))
-                .Select(methodFactory.Create)
-                .ToArray();
-
-            _properties = type
-                .GetProperties(bindingFlags)
-                .Where(property => property.IsDefined(attributeType))
-                .Select(propertyFactory.Create)
-                .ToArray();
+            _properties = properties;
+            _methods = methods;
         }
 
         public void Draw(object target)
@@ -71,5 +52,49 @@ namespace DrawableMember.Editor
                 }
             }
         }
+    }
+
+    public class DrawableMemberDrawerFactory
+    {
+        private readonly ScriptableObjectFactory _scriptableObjectFactory;
+        private readonly ParameterFactory _parameterFactory;
+        private readonly MethodFactory _methodFactory;
+        private readonly PropertyFactory _propertyFactory;
+
+        public DrawableMemberDrawerFactory()
+        {
+            _scriptableObjectFactory = new();
+            _parameterFactory = new(_scriptableObjectFactory);
+            _methodFactory = new(_parameterFactory);
+            _propertyFactory = new(_scriptableObjectFactory);
+        }
+
+        public DrawableMemberDrawer Create(Type type)
+        {
+            var attributeType = typeof(DrawableAttribute);
+
+            var bindingFlags =
+                BindingFlags.Instance
+                    | BindingFlags.Static
+                    | BindingFlags.Public
+                    | BindingFlags.NonPublic;
+
+            return Create(
+                type.GetProperties(bindingFlags)
+                    .Where(property => property.IsDefined(attributeType)),
+                type.GetMethods(bindingFlags)
+                    .Where(property => property.IsDefined(attributeType)));
+        }
+
+        public DrawableMemberDrawer Create(
+            IEnumerable<PropertyInfo> properties,
+            IEnumerable<MethodInfo> methods)
+            => new(
+                properties
+                    .Select(_propertyFactory.Create)
+                    .ToArray(),
+                methods
+                    .Select(_methodFactory.Create)
+                    .ToArray());
     }
 }

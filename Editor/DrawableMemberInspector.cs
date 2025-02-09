@@ -10,7 +10,7 @@ namespace DrawableMember.Editor
 
         private void OnEnable()
         {
-            _drawer = new DrawableMemberDrawer(target.GetType());
+            _drawer = new DrawableMemberDrawerFactory().Create(target.GetType());
         }
 
         public override void OnInspectorGUI()
