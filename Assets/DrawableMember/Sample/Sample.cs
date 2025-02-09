@@ -31,6 +31,7 @@ namespace DrawableMember.Sample
         }
 
         [Drawable]
+        [DrawableName("Int Array Prop")]
         public int[] IntArrayProp { get; private set; }
 
         [Drawable]
@@ -42,13 +43,16 @@ namespace DrawableMember.Sample
         }
 
         [Drawable]
+        [DrawableName("Test")]
         public void Method()
         {
             Debug.Log($"invoke Method");
         }
 
         [Drawable]
-        public void Method(string arg0 = "asa", bool arg1 = true)
+        public void Method(
+            string arg0 = "asa",
+            [DrawableName("is great")] bool arg1 = true)
         {
             Debug.Log($"invoke Method with {arg0}, {arg1}");
         }

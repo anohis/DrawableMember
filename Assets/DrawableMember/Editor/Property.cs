@@ -7,6 +7,7 @@ namespace DrawableMember.Editor
 
     internal class Property
     {
+        private readonly string _name;
         private readonly PropertyInfo _property;
         private readonly Parameter _getter;
         private readonly Parameter _setter;
@@ -14,10 +15,12 @@ namespace DrawableMember.Editor
         private bool _isFoldoutExpanded;
 
         public Property(
+            string name,
             PropertyInfo property,
             Parameter getter,
             Parameter setter)
         {
+            _name = name;
             _property = property;
             _getter = getter;
             _setter = setter;
@@ -25,7 +28,7 @@ namespace DrawableMember.Editor
 
         public void Draw(object target)
         {
-            _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, _property.Name);
+            _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, _name);
 
             if (!_isFoldoutExpanded)
             {
@@ -78,6 +81,9 @@ namespace DrawableMember.Editor
             var attribute = info.GetCustomAttribute<DrawableTypeAttribute>();
 
             return new(
+                info.GetCustomAttribute<DrawableNameAttribute>()
+                    ?.Name
+                    ?? info.Name,
                 info,
                 info.CanRead
                     ? new(

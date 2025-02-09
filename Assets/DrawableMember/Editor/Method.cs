@@ -1,5 +1,6 @@
 namespace DrawableMember.Editor
 {
+    using DrawableMember.Runtime;
     using System.Linq;
     using System.Reflection;
     using UnityEditor;
@@ -7,22 +8,25 @@ namespace DrawableMember.Editor
 
     internal class Method
     {
+        private readonly string _name;
         private readonly MethodInfo _method;
         private readonly Parameter[] _parameters;
 
         private bool _isFoldoutExpanded;
 
         public Method(
+            string name,
             MethodInfo method,
             Parameter[] parameters)
         {
+            _name = name;
             _method = method;
             _parameters = parameters;
         }
 
         public void Draw(object target)
         {
-            _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, _method.Name);
+            _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, _name);
 
             if (!_isFoldoutExpanded)
             {
@@ -66,6 +70,9 @@ namespace DrawableMember.Editor
 
         public Method Create(MethodInfo info)
             => new(
+                info.GetCustomAttribute<DrawableNameAttribute>()
+                    ?.Name
+                    ?? info.Name,
                 info,
                 info.GetParameters()
                     .Select(_parameterFactory.Create)

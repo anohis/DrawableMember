@@ -82,7 +82,9 @@ namespace DrawableMember.Editor
 
             var parameter = new Parameter(
                 _scriptableObjectFactory.Create(parameterType),
-                info.Name);
+                info.GetCustomAttribute<DrawableNameAttribute>()
+                    ?.Name
+                    ?? info.Name);
 
             if (info.HasDefaultValue)
             {
