@@ -10,14 +10,14 @@ namespace DrawableMember.Editor
     {
         private readonly string _name;
         private readonly MethodInfo _method;
-        private readonly Parameter[] _parameters;
+        private readonly IVariable[] _parameters;
 
         private bool _isFoldoutExpanded;
 
         public Method(
             string name,
             MethodInfo method,
-            Parameter[] parameters)
+            IVariable[] parameters)
         {
             _name = name;
             _method = method;
@@ -61,21 +61,40 @@ namespace DrawableMember.Editor
 
     internal class MethodFactory
     {
-        private readonly ParameterFactory _parameterFactory;
+        private readonly VariableFactory _variableFactory;
 
-        public MethodFactory(ParameterFactory parameterFactory)
+        public MethodFactory(VariableFactory variableFactory)
         {
-            _parameterFactory = parameterFactory;
+            _variableFactory = variableFactory;
         }
 
         public Method Create(MethodInfo info)
             => new(
-                info.GetCustomAttribute<DrawableNameAttribute>()
+                info.GetCustomAttribute<NameAttribute>()
                     ?.Name
                     ?? info.Name,
                 info,
                 info.GetParameters()
-                    .Select(_parameterFactory.Create)
+                    .Select(parameter =>
+                    {
+                        var overrideType = parameter.GetCustomAttribute<TypeAttribute>()?.Type;
+
+                        var parameterType =
+                            (overrideType?.IsInheritsFrom(parameter.ParameterType)
+                                ?? false)
+                                && (!parameter.HasDefaultValue
+                                    || parameter.DefaultValue
+                                        .GetType()
+                                        .IsInheritsFrom(overrideType))
+                            ? overrideType
+                            : parameter.ParameterType;
+
+                        return _variableFactory
+                            .Create(
+                                parameter.Name,
+                                parameterType,
+                                parameter.GetCustomAttribute<MemberSelectorAttribute>()?.SelectorType);
+                    })
                     .ToArray());
     }
 }

@@ -19,7 +19,7 @@ namespace DrawableMember.Editor
 
         private bool _isFoldoutExpanded;
 
-        internal DrawableMemberDrawer(IMemberDrawer[] drawers)
+        public DrawableMemberDrawer(IMemberDrawer[] drawers)
         {
             _drawers = drawers;
         }
@@ -50,56 +50,79 @@ namespace DrawableMember.Editor
         }
     }
 
-    public class DrawableMemberDrawerFactory
+    public class MemberDrawerFactory
     {
-        private readonly ScriptableObjectFactory _scriptableObjectFactory;
-        private readonly ParameterFactory _parameterFactory;
         private readonly MethodFactory _methodFactory;
         private readonly PropertyFactory _propertyFactory;
         private readonly FieldFactory _fieldFactory;
 
-        public DrawableMemberDrawerFactory()
+        public MemberDrawerFactory()
         {
-            _scriptableObjectFactory = new();
-            _parameterFactory = new(_scriptableObjectFactory);
-            _methodFactory = new(_parameterFactory);
-            _propertyFactory = new(_scriptableObjectFactory);
-            _fieldFactory = new(_scriptableObjectFactory);
+            var variableFactory = new VariableFactory(
+                new(new()),
+                new(this));
+
+            _methodFactory = new(variableFactory);
+            _propertyFactory = new(variableFactory);
+            _fieldFactory = new(variableFactory);
         }
 
-        public DrawableMemberDrawer Create(Type type)
+        public IMemberDrawer[] Create(Type type)
+            => Create(new MemberSelector(type));
+
+        public IMemberDrawer[] Create(IMemberSelector memberSelector)
+            => Create(
+                memberSelector.Fields,
+                memberSelector.Properties,
+                memberSelector.Methods);
+
+        public IMemberDrawer[] Create(
+            IEnumerable<FieldInfo> fields,
+            IEnumerable<PropertyInfo> properties,
+            IEnumerable<MethodInfo> methods)
+            => fields
+                .Select(_fieldFactory.Create)
+                .Cast<IMemberDrawer>()
+                .Concat(properties
+                    .Select(_propertyFactory.Create)
+                    .Cast<IMemberDrawer>())
+                .Concat(methods
+                    .Select(_methodFactory.Create)
+                    .Cast<IMemberDrawer>())
+                .ToArray();
+    }
+
+    internal sealed class MemberSelector : IMemberSelector
+    {
+        private readonly FieldInfo[] _fields;
+        private readonly PropertyInfo[] _properties;
+        private readonly MethodInfo[] _methods;
+
+        FieldInfo[] IMemberSelector.Fields => _fields;
+        PropertyInfo[] IMemberSelector.Properties => _properties;
+        MethodInfo[] IMemberSelector.Methods => _methods;
+
+        public MemberSelector(Type type)
         {
             var attributeType = typeof(DrawableAttribute);
-
             var bindingFlags =
                 BindingFlags.Instance
                     | BindingFlags.Static
                     | BindingFlags.Public
                     | BindingFlags.NonPublic;
 
-            return Create(
-                type.GetFields(bindingFlags)
-                    .Where(field => field.IsDefined(attributeType)),
-                type.GetProperties(bindingFlags)
-                    .Where(property => property.IsDefined(attributeType)),
-                type.GetMethods(bindingFlags)
-                    .Where(method => method.IsDefined(attributeType)));
+            _fields = type
+                .GetFields(bindingFlags)
+                .Where(field => field.IsDefined(attributeType))
+                .ToArray();
+            _properties = type
+                .GetProperties(bindingFlags)
+                .Where(property => property.IsDefined(attributeType))
+                .ToArray();
+            _methods = type
+                .GetMethods(bindingFlags)
+                .Where(method => method.IsDefined(attributeType))
+                .ToArray();
         }
-
-        public DrawableMemberDrawer Create(
-            IEnumerable<FieldInfo> fields,
-            IEnumerable<PropertyInfo> properties,
-            IEnumerable<MethodInfo> methods)
-            => new(
-                fields
-                    .Select(_fieldFactory.Create)
-                    .Cast<IMemberDrawer>()
-                    .Concat(properties
-                        .Select(_propertyFactory.Create)
-                        .Cast<IMemberDrawer>())
-                    .Concat(methods
-                        .Select(_methodFactory.Create)
-                        .Cast<IMemberDrawer>())
-                    .ToArray());
     }
 }

@@ -3,65 +3,43 @@ namespace DrawableMember.Editor
     using DrawableMember.Runtime;
     using System.Reflection;
     using UnityEditor;
-    using UnityEngine;
 
     internal class Property : IMemberDrawer
     {
-        private readonly string _name;
         private readonly PropertyInfo _property;
-        private readonly Parameter _getter;
-        private readonly Parameter _setter;
-
-        private bool _isFoldoutExpanded;
+        private readonly IVariable _value;
 
         public Property(
-            string name,
             PropertyInfo property,
-            Parameter getter,
-            Parameter setter)
+            IVariable value)
         {
-            _name = name;
             _property = property;
-            _getter = getter;
-            _setter = setter;
+            _value = value;
         }
 
         void IMemberDrawer.Draw(object target)
         {
-            _isFoldoutExpanded = EditorGUILayout.Foldout(_isFoldoutExpanded, _name);
-
-            if (!_isFoldoutExpanded)
+            if (_property.CanRead)
             {
-                return;
+                _value.Value = _property.GetValue(target);
             }
 
-            using (new EditorGUI.IndentLevelScope())
-            using (new EditorGUILayout.HorizontalScope())
+            if (_property.CanWrite)
             {
-                EditorGUILayout.Space(EditorGUI.indentLevel * 15, false);
-
-                using (new EditorGUI.IndentLevelScope(-1))
-                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                using (var scope = new EditorGUI.ChangeCheckScope())
                 {
-                    if (_getter != null)
+                    _value.Draw();
+                    if (scope.changed)
                     {
-                        using (new EditorGUI.DisabledScope(true))
-                        {
-                            _getter.Value = _property.GetValue(target);
-                            _getter.Draw();
-                        }
+                        _property.SetValue(target, _value.Value);
                     }
-
-                    if (_setter != null)
-                    {
-                        _setter.Draw();
-                        if (GUILayout.Button("Set Value"))
-                        {
-                            _property.SetValue(
-                               target,
-                               _setter.Value);
-                        }
-                    }
+                }
+            }
+            else
+            {
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    _value.Draw();
                 }
             }
         }
@@ -69,36 +47,21 @@ namespace DrawableMember.Editor
 
     internal class PropertyFactory
     {
-        private readonly ScriptableObjectFactory _scriptableObjectFactory;
+        private readonly VariableFactory _variableFactory;
 
-        public PropertyFactory(ScriptableObjectFactory scriptableObjectFactory)
+        public PropertyFactory(VariableFactory variableFactory)
         {
-            _scriptableObjectFactory = scriptableObjectFactory;
+            _variableFactory = variableFactory;
         }
 
         public Property Create(PropertyInfo info)
-        {
-            var attribute = info.GetCustomAttribute<DrawableTypeAttribute>();
-
-            return new(
-                info.GetCustomAttribute<DrawableNameAttribute>()
-                    ?.Name
-                    ?? info.Name,
+            => new(
                 info,
-                info.CanRead
-                    ? new(
-                        _scriptableObjectFactory.Create(info.PropertyType),
-                        "current value")
-                    : null,
-                info.CanWrite
-                    ? new(
-                        _scriptableObjectFactory.Create(
-                            attribute != null
-                                && attribute.Type.IsInheritsFrom(info.PropertyType)
-                                ? attribute.Type
-                                : info.PropertyType),
-                        "new value")
-                    : null);
-        }
+                _variableFactory.Create(
+                    info.GetCustomAttribute<NameAttribute>()
+                        ?.Name
+                        ?? info.Name,
+                    info.PropertyType,
+                    info.GetCustomAttribute<MemberSelectorAttribute>()?.SelectorType));
     }
 }

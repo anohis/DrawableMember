@@ -11,13 +11,13 @@ namespace DrawableMember.Runtime
     }
 
     [AttributeUsage(
-        AttributeTargets.Parameter | AttributeTargets.Property,
+        AttributeTargets.Parameter,
         AllowMultiple = false)]
-    public sealed class DrawableTypeAttribute : Attribute
+    public sealed class TypeAttribute : Attribute
     {
         public readonly Type Type;
 
-        public DrawableTypeAttribute(Type type)
+        public TypeAttribute(Type type)
         {
             Type = type;
         }
@@ -26,15 +26,31 @@ namespace DrawableMember.Runtime
     [AttributeUsage(
         AttributeTargets.Parameter
             | AttributeTargets.Property
-            | AttributeTargets.Method,
+            | AttributeTargets.Method
+            | AttributeTargets.Field,
         AllowMultiple = false)]
-    public sealed class DrawableNameAttribute : Attribute
+    public sealed class NameAttribute : Attribute
     {
         public readonly string Name;
 
-        public DrawableNameAttribute(string name)
+        public NameAttribute(string name)
         {
             Name = name;
+        }
+    }
+
+    [AttributeUsage(
+       AttributeTargets.Parameter
+            | AttributeTargets.Property
+            | AttributeTargets.Field,
+       AllowMultiple = false)]
+    public sealed class MemberSelectorAttribute : Attribute
+    {
+        public readonly Type SelectorType;
+
+        public MemberSelectorAttribute(Type selectorType)
+        {
+            SelectorType = selectorType;
         }
     }
 }
