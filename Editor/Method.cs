@@ -91,9 +91,13 @@ namespace DrawableMember.Editor
 
                         return _variableFactory
                             .Create(
-                                parameter.Name,
+                                parameter.GetCustomAttribute<NameAttribute>()
+                                    ?.Name
+                                    ?? parameter.Name,
                                 parameterType,
-                                parameter.GetCustomAttribute<MemberSelectorAttribute>()?.SelectorType);
+                                parameter.GetCustomAttribute<MemberSelectorAttribute>()?.SelectorType,
+                                parameter.HasDefaultValue,
+                                parameter.DefaultValue);
                     })
                     .ToArray());
     }
