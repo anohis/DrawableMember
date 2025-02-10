@@ -1,11 +1,12 @@
 namespace DrawableMember.Editor
 {
     using DrawableMember.Runtime;
+    using System;
     using System.Reflection;
     using UnityEditor;
     using UnityEngine;
 
-    internal class Parameter
+    internal class Parameter : IVariable
     {
         private static readonly GUIContent NOT_SERIALIZABLE_LABEL = new GUIContent("is not serializable");
 
@@ -33,7 +34,7 @@ namespace DrawableMember.Editor
             }
         }
 
-        public Parameter(ScriptableObject target, string name)
+        public Parameter(string name, ScriptableObject target)
         {
             _target = target;
             _valueField = target
@@ -44,7 +45,7 @@ namespace DrawableMember.Editor
             _label = new GUIContent(name);
         }
 
-        public void Draw()
+        void IVariable.Draw()
         {
             if (_sp == null)
             {
@@ -68,23 +69,23 @@ namespace DrawableMember.Editor
 
         public Parameter Create(ParameterInfo info)
         {
-            var attribute = info.GetCustomAttribute<DrawableTypeAttribute>();
+            var overrideType = info.GetCustomAttribute<TypeAttribute>()?.Type;
 
             var parameterType =
-                attribute != null
-                    && attribute.Type.IsInheritsFrom(info.ParameterType)
+                (overrideType?.IsInheritsFrom(info.ParameterType)
+                    ?? false)
                     && (!info.HasDefaultValue
                         || info.DefaultValue
                             .GetType()
-                            .IsInheritsFrom(attribute.Type))
-                ? attribute.Type
+                            .IsInheritsFrom(overrideType))
+                ? overrideType
                 : info.ParameterType;
 
-            var parameter = new Parameter(
-                _scriptableObjectFactory.Create(parameterType),
-                info.GetCustomAttribute<DrawableNameAttribute>()
+            var parameter = Create(
+                info.GetCustomAttribute<NameAttribute>()
                     ?.Name
-                    ?? info.Name);
+                    ?? info.Name,
+                parameterType);
 
             if (info.HasDefaultValue)
             {
@@ -93,5 +94,10 @@ namespace DrawableMember.Editor
 
             return parameter;
         }
+
+        public Parameter Create(string name, Type type)
+            => new(
+                name,
+                _scriptableObjectFactory.Create(type));
     }
 }

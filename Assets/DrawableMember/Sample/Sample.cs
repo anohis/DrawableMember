@@ -4,16 +4,28 @@ namespace DrawableMember.Sample
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using UnityEngine;
 
     internal class Sample : MonoBehaviour
     {
         private int _intProp;
 
+        #region Field
         [Drawable]
+        [Name("ID")]
         [SerializeField]
         private int _number;
 
+        [Drawable]
+        private int _nonSerializedNumber;
+
+        [Drawable]
+        [MemberSelector(typeof(PublicFieldsSelector<NonSerializedClass>))]
+        private NonSerializedClass _nonSerializedClass;
+        #endregion
+
+        #region Property
         [Drawable]
         public int IntProp
         {
@@ -35,11 +47,10 @@ namespace DrawableMember.Sample
         }
 
         [Drawable]
-        [DrawableName("Int Array Prop")]
+        [Name("Int Array Prop")]
         public int[] IntArrayProp { get; private set; }
 
         [Drawable]
-        [DrawableType(typeof(int[]))]
         public IEnumerable<int> NonSerializedIntArrayProp
         {
             get => IntArrayProp;
@@ -47,30 +58,40 @@ namespace DrawableMember.Sample
         }
 
         [Drawable]
-        [DrawableName("Test")]
+        [MemberSelector(typeof(PublicFieldsSelector<NonSerializedClass>))]
+        private NonSerializedClass NonSerializedClassProp
+        {
+            get => _nonSerializedClass;
+            set => _nonSerializedClass = value;
+        }
+        #endregion
+
+        #region Method
+        [Drawable]
+        [Name("Show _nonSerializedClass")]
         public void Method()
         {
-            Debug.Log($"invoke Method");
+            Debug.Log(_nonSerializedClass);
         }
 
         [Drawable]
         public void Method(
             string arg0 = "asa",
-            [DrawableName("is great")] bool arg1 = true)
+            [Name("is great")] bool arg1 = true)
         {
-            Debug.Log($"invoke Method with {arg0}, {arg1}");
+            Debug.Log($"invoke Method with arg0<{arg0}>, arg1<{arg1}>");
         }
 
         [Drawable]
         public void Method(
-            [DrawableType(typeof(SerializableClass[]))] IEnumerable<SerializableClass> arg0,
-            IEnumerable<NonSerializedClass> arg1,
-            SerializableClass[] arg2,
-            IEnumerable<NonSerializedClass> arg3,
-            NonSerializedClass[] arg4)
+            [Type(typeof(SerializableClass[]))]
+            IEnumerable<SerializableClass> arg0,
+            [MemberSelector(typeof(PublicFieldsSelector<NonSerializedClass>))]
+            NonSerializedClass arg1)
         {
-            Debug.Log($"invoke Method with {arg0}, {arg1}, {arg2}, {arg3}, {arg4}");
+            Debug.Log($"invoke Method with arg0<{arg0}>, arg1<{arg1}>");
         }
+        #endregion
     }
 
     [Serializable]
@@ -78,11 +99,39 @@ namespace DrawableMember.Sample
     {
         public int A;
         public int B;
+
+        public override string ToString()
+            => $"A: {A}, B: {B}";
     }
 
     internal class NonSerializedClass
     {
+        internal class Data
+        {
+            public string Name;
+        }
+
         public int A;
-        public int B;
+
+        [MemberSelector(typeof(PublicFieldsSelector<Data>))]
+        public Data CustomData;
+
+        public override string ToString()
+            => $"A: {A}, Name: {CustomData?.Name}";
+    }
+
+    internal class PublicFieldsSelector<T> : IMemberSelector
+    {
+        private readonly FieldInfo[] _fields;
+
+        FieldInfo[] IMemberSelector.Fields => _fields;
+        PropertyInfo[] IMemberSelector.Properties { get; } = Array.Empty<PropertyInfo>();
+        MethodInfo[] IMemberSelector.Methods { get; } = Array.Empty<MethodInfo>();
+
+        public PublicFieldsSelector()
+        {
+            _fields = typeof(T)
+                .GetFields(BindingFlags.Instance | BindingFlags.Public);
+        }
     }
 }
