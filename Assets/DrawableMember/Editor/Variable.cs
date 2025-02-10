@@ -26,8 +26,11 @@ namespace DrawableMember.Editor
         public IVariable Create(
             string name,
             Type type,
-            Type memberSelectorType = null)
-            => (memberSelectorType
+            Type memberSelectorType = null,
+            bool hasDefaultValue = false,
+            object defaultValue = null)
+        {
+            IVariable variable = (memberSelectorType
                    ?.IsInheritsFrom(typeof(IMemberSelector))
                    ?? false)
                 ? _dynamicVariableFactory.Create(
@@ -37,5 +40,13 @@ namespace DrawableMember.Editor
                 : _parameterFactory.Create(
                     name,
                     type);
+
+            if (hasDefaultValue)
+            {
+                variable.Value = defaultValue;
+            }
+
+            return variable;
+        }
     }
 }
