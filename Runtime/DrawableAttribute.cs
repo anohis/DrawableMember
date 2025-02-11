@@ -40,9 +40,8 @@ namespace DrawableMember.Runtime
     }
 
     [AttributeUsage(
-       AttributeTargets.Parameter
-            | AttributeTargets.Property
-            | AttributeTargets.Field,
+       AttributeTargets.Class
+            | AttributeTargets.Struct,
        AllowMultiple = false)]
     public sealed class MemberSelectorAttribute : Attribute
     {
