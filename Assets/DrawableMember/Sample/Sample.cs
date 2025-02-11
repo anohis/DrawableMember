@@ -112,12 +112,19 @@ namespace DrawableMember.Sample
         }
 
         public int A;
+        public string B;
 
         [MemberSelector(typeof(PublicFieldsSelector<Data>))]
         public Data CustomData;
 
+        public NonSerializedClass(int a, string b = "asa")
+        {
+            A = a;
+            B = b;
+        }
+
         public override string ToString()
-            => $"A: {A}, Name: {CustomData?.Name}";
+            => $"A: {A}, B: {B}, Name: {CustomData?.Name}";
     }
 
     internal class PublicFieldsSelector<T> : IMemberSelector

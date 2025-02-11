@@ -49,7 +49,7 @@ namespace DrawableMember.Editor
                         EditorGUILayout.LabelField(NOT_SERIALIZABLE_LABEL);
                         if (GUILayout.Button("new instance"))
                         {
-                            Value = Activator.CreateInstance(_type);
+                            Value = _type.CreateInstance();
                         }
                         return;
                     }
