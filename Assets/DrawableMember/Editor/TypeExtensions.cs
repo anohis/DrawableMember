@@ -27,5 +27,13 @@ namespace DrawableMember.Editor
             => type.IsValueType
                 ? Activator.CreateInstance(type)
                 : null;
+
+        public static bool IsUnitySerializable(this Type type)
+            => !type.IsAbstract
+                && !type.IsInterface
+                && !type.IsGenericTypeDefinition
+                && (type.IsEnum
+                    || type.IsSerializable
+                    || type.IsInheritsFrom(typeof(UnityEngine.Object)));
     }
 }

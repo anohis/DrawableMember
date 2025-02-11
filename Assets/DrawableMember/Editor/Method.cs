@@ -95,7 +95,6 @@ namespace DrawableMember.Editor
                                     ?.Name
                                     ?? parameter.Name,
                                 parameterType,
-                                parameter.GetCustomAttribute<MemberSelectorAttribute>()?.SelectorType,
                                 parameter.HasDefaultValue,
                                 parameter.DefaultValue);
                     })

@@ -1,8 +1,9 @@
-using DrawableMember.Runtime;
-using System;
-
 namespace DrawableMember.Editor
 {
+    using DrawableMember.Runtime;
+    using System;
+    using System.Reflection;
+
     internal interface IVariable
     {
         object Value { get; set; }
@@ -26,17 +27,27 @@ namespace DrawableMember.Editor
         public IVariable Create(
             string name,
             Type type,
-            Type memberSelectorType = null,
             bool hasDefaultValue = false,
             object defaultValue = null)
         {
-            IVariable variable = (memberSelectorType
-                   ?.IsInheritsFrom(typeof(IMemberSelector))
-                   ?? false)
+            var memberSelectorType = type
+                .GetCustomAttribute<MemberSelectorAttribute>()
+                ?.SelectorType;
+
+            var memberSelector =
+                memberSelectorType is not null
+                && memberSelectorType.IsInheritsFrom(typeof(IMemberSelector))
+                    ? Activator.CreateInstance(memberSelectorType, type) as IMemberSelector
+                    : !type.IsUnitySerializable()
+                         ? new PublicFieldAndPropertySelector(type)
+                         : null;
+
+            IVariable variable = memberSelector is not null
+                && memberSelector.Any()
                 ? _dynamicVariableFactory.Create(
                     name,
                     type,
-                    Activator.CreateInstance(memberSelectorType) as IMemberSelector)
+                    memberSelector)
                 : _parameterFactory.Create(
                     name,
                     type);

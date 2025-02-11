@@ -61,7 +61,6 @@ namespace DrawableMember.Editor
                     info.GetCustomAttribute<NameAttribute>()
                         ?.Name
                         ?? info.Name,
-                    info.PropertyType,
-                    info.GetCustomAttribute<MemberSelectorAttribute>()?.SelectorType));
+                    info.PropertyType));
     }
 }

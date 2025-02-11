@@ -21,7 +21,6 @@ namespace DrawableMember.Sample
         private int _nonSerializedNumber;
 
         [Drawable]
-        [MemberSelector(typeof(PublicFieldsSelector<NonSerializedClass>))]
         private NonSerializedClass _nonSerializedClass;
         #endregion
 
@@ -58,7 +57,6 @@ namespace DrawableMember.Sample
         }
 
         [Drawable]
-        [MemberSelector(typeof(PublicFieldsSelector<NonSerializedClass>))]
         private NonSerializedClass NonSerializedClassProp
         {
             get => _nonSerializedClass;
@@ -86,7 +84,6 @@ namespace DrawableMember.Sample
         public void Method(
             [Type(typeof(SerializableClass[]))]
             IEnumerable<SerializableClass> arg0,
-            [MemberSelector(typeof(PublicFieldsSelector<NonSerializedClass>))]
             NonSerializedClass arg1)
         {
             Debug.Log($"invoke Method with arg0<{arg0}>, arg1<{arg1}>");
@@ -104,17 +101,20 @@ namespace DrawableMember.Sample
             => $"A: {A}, B: {B}";
     }
 
+    [MemberSelector(typeof(PublicFieldsSelector))]
     internal class NonSerializedClass
     {
         internal class Data
         {
             public string Name;
+
+            public int Age { get; }
         }
 
         public int A;
         public string B;
+        public IEnumerable<int> C;
 
-        [MemberSelector(typeof(PublicFieldsSelector<Data>))]
         public Data CustomData;
 
         public NonSerializedClass(int a, string b = "asa")
@@ -124,10 +124,10 @@ namespace DrawableMember.Sample
         }
 
         public override string ToString()
-            => $"A: {A}, B: {B}, Name: {CustomData?.Name}";
+            => $"A: {A}, B: {B}, C: {C}, Name: {CustomData?.Name}";
     }
 
-    internal class PublicFieldsSelector<T> : IMemberSelector
+    internal class PublicFieldsSelector : IMemberSelector
     {
         private readonly FieldInfo[] _fields;
 
@@ -135,9 +135,9 @@ namespace DrawableMember.Sample
         PropertyInfo[] IMemberSelector.Properties { get; } = Array.Empty<PropertyInfo>();
         MethodInfo[] IMemberSelector.Methods { get; } = Array.Empty<MethodInfo>();
 
-        public PublicFieldsSelector()
+        public PublicFieldsSelector(Type type)
         {
-            _fields = typeof(T)
+            _fields = type
                 .GetFields(BindingFlags.Instance | BindingFlags.Public);
         }
     }

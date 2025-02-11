@@ -68,7 +68,7 @@ namespace DrawableMember.Editor
         }
 
         public IMemberDrawer[] Create(Type type)
-            => Create(new MemberSelector(type));
+            => Create(new DrawableMemberSelector(type));
 
         public IMemberDrawer[] Create(IMemberSelector memberSelector)
             => Create(
@@ -92,7 +92,7 @@ namespace DrawableMember.Editor
                 .ToArray();
     }
 
-    internal sealed class MemberSelector : IMemberSelector
+    internal sealed class DrawableMemberSelector : IMemberSelector
     {
         private readonly FieldInfo[] _fields;
         private readonly PropertyInfo[] _properties;
@@ -102,7 +102,7 @@ namespace DrawableMember.Editor
         PropertyInfo[] IMemberSelector.Properties => _properties;
         MethodInfo[] IMemberSelector.Methods => _methods;
 
-        public MemberSelector(Type type)
+        public DrawableMemberSelector(Type type)
         {
             var attributeType = typeof(DrawableAttribute);
             var bindingFlags =
@@ -122,6 +122,30 @@ namespace DrawableMember.Editor
             _methods = type
                 .GetMethods(bindingFlags)
                 .Where(method => method.IsDefined(attributeType))
+                .ToArray();
+        }
+    }
+
+    internal sealed class PublicFieldAndPropertySelector : IMemberSelector
+    {
+        private readonly FieldInfo[] _fields;
+        private readonly PropertyInfo[] _properties;
+
+        FieldInfo[] IMemberSelector.Fields => _fields;
+        PropertyInfo[] IMemberSelector.Properties => _properties;
+        MethodInfo[] IMemberSelector.Methods { get; } = Array.Empty<MethodInfo>();
+
+        public PublicFieldAndPropertySelector(Type type)
+        {
+            var bindingFlags =
+                BindingFlags.Instance
+                    | BindingFlags.Public;
+
+            _fields = type
+                .GetFields(bindingFlags)
+                .ToArray();
+            _properties = type
+                .GetProperties(bindingFlags)
                 .ToArray();
         }
     }
